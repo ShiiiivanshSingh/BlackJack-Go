@@ -27,7 +27,8 @@ A modern, web-based blackjack game built for entertainment and educational purpo
 <h1 align="center">☁️ Project Screenshots:</h1>
 
 ![image](https://github.com/user-attachments/assets/70ab5a4f-dd70-464a-9897-0688de57526b)
-![image](https://github.com/user-attachments/assets/3e6ef147-e176-4d2b-aedd-5508014ed532)
+![image](https://github.com/user-attachments/assets/956a21cb-fc18-4784-aa7a-f19f27787619)
+
 
 ### Key Features 🌟
 
