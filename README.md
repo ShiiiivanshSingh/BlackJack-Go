@@ -1,10 +1,27 @@
-# Blackjack Go 🎮
+
+<h1 align="center" id="title">Blackjack Go 🎮</h1>
 
 A modern, web-based blackjack game built for entertainment and educational purposes. No real money involved! 🚫💰
 
-## About 📖
 
-Blackjack Go is a free-to-play implementation of the classic casino card game. Practice your blackjack skills in a safe, risk-free environment.
+#
+<h1 align="center">How to Play 🎲</h1>
+
+1. Click "Take a Seat" to start
+2. Try to beat the dealer by getting closer to 21
+3. Choose to "Hit" (take another card) or "Stand" (keep your hand)
+4. Don't go over 21 - that's a bust!
+5. Track your progress with game statistics
+
+
+
+
+
+
+<h1 align="center">☁️ Project Screenshots:</h1>
+
+![image](https://github.com/user-attachments/assets/70ab5a4f-dd70-464a-9897-0688de57526b)
+![image](https://github.com/user-attachments/assets/3e6ef147-e176-4d2b-aedd-5508014ed532)
 
 ### Key Features 🌟
 
@@ -15,6 +32,7 @@ Blackjack Go is a free-to-play implementation of the classic casino card game. P
 - Mobile-friendly design
 - Keyboard shortcuts
 - Interactive tutorials
+
 
 ## Important Notice ⚠️
 
@@ -30,13 +48,7 @@ If you or someone you know is struggling with gambling addiction, please seek he
 - [GamCare](https://www.gamcare.org.uk/)
 - [Gambling Therapy](https://www.gamblingtherapy.org/)
 
-## How to Play 🎲
 
-1. Click "Take a Seat" to start
-2. Try to beat the dealer by getting closer to 21
-3. Choose to "Hit" (take another card) or "Stand" (keep your hand)
-4. Don't go over 21 - that's a bust!
-5. Track your progress with game statistics
 
 ## Technologies Used 💻
 
