@@ -68,6 +68,14 @@
                 <div id="playerCards" class="cards-container"></div>
             </div>
 
+            <div class="bet-controls">
+                <button class="bet-button" onclick="decreaseBet()" id="decreaseBetBtn">-</button>
+                <div class="bet-amount">
+                    Current Bet: <span id="currentBet">$100</span>
+                </div>
+                <button class="bet-button" onclick="increaseBet()" id="increaseBetBtn">+</button>
+            </div>
+
             <div class="game-controls">
                 <button id="hitButton" class="casino-button px-8 py-2 rounded-full text-xl font-bold">Hit</button>
                 <button id="standButton" class="casino-button px-8 py-2 rounded-full text-xl font-bold">Stand</button>

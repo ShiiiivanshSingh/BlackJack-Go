@@ -12,6 +12,9 @@ let stats = {
     gamesWon: 0,
     gamesLost: 0
 };
+let usedCards = new Set();
+let numberOfDecks = 6; // Standard casino usually uses 6-8 decks
+let maxCardsBeforeReshuffle = 52 * numberOfDecks * 0.75; // Reshuffle at 75% penetration
 
 function createCardElement(card, isHidden = false) {
     if (isHidden) {
@@ -52,12 +55,30 @@ function createCardElement(card, isHidden = false) {
 }
 
 function drawCard() {
-    let suit = Object.keys(suits)[Math.floor(Math.random() * 4)];
-    let value = values[Math.floor(Math.random() * values.length)];
-    return { suit, value };
+    // Check if we need to reshuffle based on penetration
+    if (usedCards.size >= maxCardsBeforeReshuffle) {
+        usedCards.clear();
+        showShuffleMessage();
+    }
+    
+    let card;
+    do {
+        let suit = Object.keys(suits)[Math.floor(Math.random() * 4)];
+        let value = values[Math.floor(Math.random() * values.length)];
+        card = `${value}-${suit}`;
+    } while (usedCards.has(card) && usedCards.size < (52 * numberOfDecks));
+    
+    usedCards.add(card);
+    return {
+        suit: card.split('-')[1],
+        value: card.split('-')[0]
+    };
 }
 
 function startGame() {
+    // Clear used cards at the start of each game
+    usedCards.clear();
+    
     if (balance <= 0) {
         alert("You're out of money! Game over!");
         return;
@@ -68,7 +89,7 @@ function startGame() {
     document.getElementById('gameOverScreen').classList.add('hidden');
     
     playerHand = [drawCard(), drawCard()];
-    dealerHand = [drawCard()];
+    dealerHand = [drawCard(), drawCard()];
     gameInProgress = true;
     enableButtons(true);
     renderGame(true);
@@ -81,7 +102,7 @@ function renderGame(isInitial = false) {
     
     document.getElementById('dealerCards').innerHTML = 
         dealerHand.map((card, index) => 
-            createCardElement(card, isInitial && index > 0)
+            createCardElement(card, isInitial && index === 1)
         ).join('');
     
     updateTotals();
@@ -104,47 +125,79 @@ function enableButtons(enabled) {
 
 function hit() {
     if (!gameInProgress) return;
+    enableButtons(false); // Prevent double-clicking during animation
     
     playerHand.push(drawCard());
     renderGame(true);
     
     let playerTotal = getHandValue(playerHand);
     if (playerTotal > 21) {
-        balance -= 100;
-        document.getElementById('balance').textContent = `$${balance}`;
-        endGame("You Bust! Dealer Wins.", false);
+        showRevealMessage();
+        renderGame(false);
+        updateTotals();
+        
+        setTimeout(() => {
+            balance -= 100;
+            document.getElementById('balance').textContent = `$${balance}`;
+            endGame("You Bust! Dealer Wins.", false);
+        }, 3000);
+    } else {
+        enableButtons(true); // Re-enable buttons if game continues
     }
 }
 
 function stand() {
     if (!gameInProgress) return;
+    enableButtons(false); // Prevent double-clicking
     
-    while (getHandValue(dealerHand) < 17) {
-        dealerHand.push(drawCard());
+    // Dealer must draw on soft 17 (industry standard)
+    while (getHandValue(dealerHand) <= 17) {
+        // Check if it's a soft 17
+        if (getHandValue(dealerHand) === 17 && dealerHand.some(card => card.value === 'A')) {
+            dealerHand.push(drawCard());
+        } else if (getHandValue(dealerHand) < 17) {
+            dealerHand.push(drawCard());
+        } else {
+            break;
+        }
     }
     
+    showRevealMessage();
     renderGame(false);
-    determineWinner();
+    updateTotals();
+    
+    setTimeout(() => {
+        determineWinner();
+    }, 3000);
 }
 
 function getHandValue(hand) {
     let total = 0;
     let aces = 0;
     
-    hand.forEach(card => {
+    // Sort non-aces first to handle aces value properly
+    const sortedHand = [...hand].sort((a, b) => {
+        if (a.value === 'A') return 1;
+        if (b.value === 'A') return -1;
+        return 0;
+    });
+    
+    for (let card of sortedHand) {
         if (['J', 'Q', 'K'].includes(card.value)) {
             total += 10;
         } else if (card.value === 'A') {
             aces += 1;
+            // Initially count ace as 11
             total += 11;
         } else {
             total += parseInt(card.value);
         }
-    });
-    
-    while (total > 21 && aces > 0) {
-        total -= 10;
-        aces--;
+        
+        // Convert aces from 11 to 1 as needed
+        while (total > 21 && aces > 0) {
+            total -= 10;
+            aces--;
+        }
     }
     
     return total;
@@ -154,7 +207,18 @@ function determineWinner() {
     let playerTotal = getHandValue(playerHand);
     let dealerTotal = getHandValue(dealerHand);
     
-    if (playerTotal > 21) {
+    let playerBlackjack = playerTotal === 21 && playerHand.length === 2;
+    let dealerBlackjack = dealerTotal === 21 && dealerHand.length === 2;
+    
+    if (playerBlackjack && !dealerBlackjack) {
+        balance += 150; // Blackjack pays 3:2
+        endGame("Blackjack! You Win!", true);
+    } else if (!playerBlackjack && dealerBlackjack) {
+        balance -= 100;
+        endGame("Dealer has Blackjack!", false);
+    } else if (playerBlackjack && dealerBlackjack) {
+        endGame("Both have Blackjack - Push!", null);
+    } else if (playerTotal > 21) {
         balance -= 100;
         endGame("You Bust! Dealer Wins.", false);
     } else if (dealerTotal > 21) {
@@ -167,7 +231,7 @@ function determineWinner() {
         balance -= 100;
         endGame("Dealer Wins!", false);
     } else {
-        endGame("It's a Tie!", false);
+        endGame("It's a Push!", null);
     }
     
     document.getElementById('balance').textContent = `$${balance}`;
@@ -177,14 +241,19 @@ function endGame(message, isWin = false) {
     gameInProgress = false;
     const gameOverText = document.getElementById('gameOverText');
     gameOverText.textContent = message;
-    gameOverText.className = isWin ? 
-        'casino-title game-over-text win celebrate' : 
-        'casino-title game-over-text shake';
     
-    if (isWin) {
-        stats.gamesWon++;
+    if (isWin !== null) {
+        gameOverText.className = isWin ? 
+            'casino-title game-over-text win celebrate' : 
+            'casino-title game-over-text shake';
+        
+        if (isWin) {
+            stats.gamesWon++;
+        } else {
+            stats.gamesLost++;
+        }
     } else {
-        stats.gamesLost++;
+        gameOverText.className = 'casino-title game-over-text';
     }
     
     const totalGames = stats.gamesWon + stats.gamesLost;
@@ -241,6 +310,32 @@ function hideInstructions() {
 function exitToMenu() {
     document.getElementById('gameOverScreen').classList.add('hidden');
     document.getElementById('landingPage').classList.remove('hidden');
+}
+
+function showRevealMessage() {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'reveal-message';
+    messageDiv.innerHTML = `
+        <div class="reveal-text">
+            <span>Dealer Card Revealed</span>
+        </div>
+    `;
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
+}
+
+function showShuffleMessage() {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'shuffle-message';
+    messageDiv.textContent = 'Shuffling Decks...';
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 1500);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
