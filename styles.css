@@ -470,7 +470,7 @@ body::before {
 }
 
 .howto-button {
-    position: fixed;
+    position: absolute;
     top: 1rem;
     left: 1rem;
     background: linear-gradient(45deg, #ffd700 0%, #ffb700 100%);
