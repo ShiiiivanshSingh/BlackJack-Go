@@ -59,9 +59,10 @@ This project is open source. Feel free to contribute by:
 
 ## Developer Links 🔗
 
-- [GitHub](https://github.com/yourusername)
-- [LinkedIn](https://linkedin.com/in/yourusername)
-- [Twitter](https://twitter.com/yourusername)
+- [GitHub](https://github.com/ShiiiivanshSingh)
+- [LinkedIn](https://www.linkedin.com/in/shivansh-pratap-singh-23b3b92b1)
+- [Twitter](https://x.com/de_mirage_fan)
+
 
 ---
 Made with ❤️ for educational purposes only 
