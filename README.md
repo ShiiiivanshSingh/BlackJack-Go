@@ -4,7 +4,13 @@
 A modern, web-based blackjack game built for entertainment and educational purposes. No real money involved! 🚫💰
 
 
-#
+<div align="center">
+
+[![BlackJack-GO](https://img.shields.io/badge/Play-Now-blue?style=for-the-badge)](https://shiiiivanshsingh.github.io/BlackJack-Go/)
+</div>
+
+
+
 <h1 align="center">How to Play 🎲</h1>
 
 1. Click "Take a Seat" to start
