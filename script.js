@@ -90,6 +90,19 @@ function startGame() {
     document.getElementById('gameScreen').classList.remove('hidden');
     document.getElementById('gameOverScreen').classList.add('hidden');
     
+    // Enable buttons and reset their styles
+    const hitButton = document.getElementById('hitButton');
+    const standButton = document.getElementById('standButton');
+    
+    hitButton.disabled = false;
+    standButton.disabled = false;
+    
+    // Remove any disabled classes or styles
+    hitButton.classList.remove('disabled');
+    standButton.classList.remove('disabled');
+    hitButton.style.opacity = '1';
+    standButton.style.opacity = '1';
+    
     renderGame(true);
     updateTotals();
     checkForBlackjack();
@@ -412,6 +425,57 @@ function checkForBlackjack() {
         return true;
     }
     return false;
+}
+
+function updateControls() {
+    const hitButton = document.getElementById('hitButton');
+    const standButton = document.getElementById('standButton');
+    
+    if (gameInProgress) {
+        hitButton.disabled = false;
+        hitButton.classList.remove('disabled');  // Remove any disabled styling
+        standButton.disabled = false;
+        standButton.classList.remove('disabled'); // Remove any disabled styling
+    } else {
+        hitButton.disabled = true;
+        hitButton.classList.add('disabled');     // Add disabled styling
+        standButton.disabled = true;
+        standButton.classList.add('disabled');   // Add disabled styling
+    }
+}
+
+function playAgain() {
+    if (balance < 100) {
+        document.getElementById('playAgainBtn').classList.add('hidden');
+        document.getElementById('resetBtn').classList.remove('hidden');
+        return;
+    }
+    
+    // Reset game state
+    gameInProgress = true;
+    playerHand = [drawCard(), drawCard()];
+    dealerHand = [drawCard(), drawCard()];
+    
+    // Reset UI
+    document.getElementById('gameOverScreen').classList.add('hidden');
+    document.getElementById('gameScreen').classList.remove('hidden');
+    
+    // Enable buttons and reset their styles
+    const hitButton = document.getElementById('hitButton');
+    const standButton = document.getElementById('standButton');
+    
+    hitButton.disabled = false;
+    standButton.disabled = false;
+    
+    // Remove any disabled classes or styles
+    hitButton.classList.remove('disabled');
+    standButton.classList.remove('disabled');
+    hitButton.style.opacity = '1';
+    standButton.style.opacity = '1';
+    
+    renderGame(true);
+    updateTotals();
+    checkForBlackjack();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
