@@ -1,0 +1,58 @@
+Hello, Shivansh here! This game has a bug where, after 7-8 rounds, it crashes and causes the website to become unresponsive. Honestly, from what I’ve learned, I don’t exactly know why this is happening. The probable reason is how I wrote this code. If you can fix this, it would be helpful. Until then, I’ll dump useful resources here. Thanks!
+
+
+
+
+
+
+
+
+Interaction to Next Paint (INP)
+280 ms
+Your local INP value of 280 ms needs improvement.
+INP interaction
+pointer
+
+
+Final Thoughts
+The main issues are:
+
+Fixed memory leak by clearing timeouts.
+Resets usedCards properly to prevent infinite loops.
+Ensures isAnimating always resets after actions.
+Handles balance reset correctly when it reaches zero.
+
+
+
+
+
+
+Memory leaks from accumulating timeouts.
+Growing usedCards leading to an infinite loop.
+Animations blocking game actions.
+Balance checks not handling edge cases.
+
+Fixes for High INP:
+Minimize JavaScript Blocking:
+
+Reduce heavy synchronous tasks in event handlers.
+Use requestIdleCallback() or setTimeout() to defer non-critical work.
+Optimize Event Handlers:
+
+Use passive: true for scroll/touch events to prevent blocking rendering.
+Debounce expensive functions (e.g., search, resize).
+Reduce Layout & Style Recalculations:
+
+Avoid getBoundingClientRect() and forced reflows in event listeners.
+Use will-change for elements that animate often.
+Efficient Rendering:
+
+Avoid unnecessary DOM updates.
+Batch DOM manipulations instead of modifying elements in a loop.
+Offload Heavy Work to Web Workers:
+
+If you’re running CPU-intensive operations in the main thread, move them to a worker thread.
+Use pointer-events: none for Non-Interactive Elements
+
+If elements don't need interaction, set pointer-events: none; to prevent unnecessary event processing.
+Next Steps
