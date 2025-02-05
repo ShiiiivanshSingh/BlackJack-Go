@@ -76,24 +76,23 @@ function drawCard() {
 }
 
 function startGame() {
-    // Clear used cards at the start of each game
-    usedCards.clear();
-    
-    if (balance <= 0) {
-        alert("You're out of money! Game over!");
+    if (balance < 100) {
+        document.getElementById('playAgainBtn').classList.add('hidden');
+        document.getElementById('resetBtn').classList.remove('hidden');
         return;
     }
+    
+    gameInProgress = true;
+    playerHand = [drawCard(), drawCard()];
+    dealerHand = [drawCard(), drawCard()];
     
     document.getElementById('landingPage').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
     document.getElementById('gameOverScreen').classList.add('hidden');
     
-    playerHand = [drawCard(), drawCard()];
-    dealerHand = [drawCard(), drawCard()];
-    gameInProgress = true;
-    enableButtons(true);
     renderGame(true);
     updateTotals();
+    checkForBlackjack();
 }
 
 function renderGame(isInitial = false) {
@@ -157,10 +156,9 @@ function stand() {
     
     let dealerTotal = calculateHandTotal(dealerHand);
     
-    // Add initial delay after revealing dealer's card
     setTimeout(() => {
-        // Function to draw dealer cards one at a time
         const drawDealerCard = () => {
+            dealerTotal = calculateHandTotal(dealerHand);
             if (dealerTotal < 17) {
                 showDealerDrawMessage();
                 setTimeout(() => {
@@ -169,26 +167,30 @@ function stand() {
                     renderGame(false);
                     updateTotals();
                     
-                    // Recursively call with delay for next card if needed
                     if (dealerTotal < 17) {
                         setTimeout(drawDealerCard, 1000);
                     } else {
-                        // All cards drawn, show game over after delay
+                        showDealerStandMessage(dealerTotal);
                         setTimeout(() => {
-                            determineWinner();
-                        }, 800);
+                            determineWinner();  
+                        }, 3500);
                     }
                 }, 800);
+            } else {
+                showDealerStandMessage(dealerTotal);
+                setTimeout(() => {
+                    determineWinner();  
+                }, 3500);
             }
         };
         
         if (dealerTotal < 17) {
             drawDealerCard();
         } else {
-            // No cards needed, proceed to game over
+            showDealerStandMessage(dealerTotal);
             setTimeout(() => {
-                determineWinner();
-            }, 800);
+                determineWinner();  // Now 3500ms delay
+            }, 3500);
         }
         
     }, 1000);
@@ -198,29 +200,21 @@ function calculateHandTotal(hand) {
     let total = 0;
     let aces = 0;
     
-    // Sort non-aces first to handle aces value properly
-    const sortedHand = [...hand].sort((a, b) => {
-        if (a.value === 'A') return 1;
-        if (b.value === 'A') return -1;
-        return 0;
-    });
-    
-    for (let card of sortedHand) {
-        if (['J', 'Q', 'K'].includes(card.value)) {
-            total += 10;
-        } else if (card.value === 'A') {
-            aces += 1;
-            // Initially count ace as 11
+    for (let card of hand) {
+        if (card.value === 'A') {
+            aces++;
             total += 11;
+        } else if (['K', 'Q', 'J'].includes(card.value)) {
+            total += 10;
         } else {
             total += parseInt(card.value);
         }
-        
-        // Convert aces from 11 to 1 as needed
-        while (total > 21 && aces > 0) {
-            total -= 10;
-            aces--;
-        }
+    }
+    
+    // Adjust for aces
+    while (total > 21 && aces > 0) {
+        total -= 10;
+        aces--;
     }
     
     return total;
@@ -379,6 +373,45 @@ function showDealerDrawMessage() {
     setTimeout(() => {
         messageDiv.remove();
     }, 800);
+}
+
+function showDealerStandMessage(total) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'shuffle-message';
+    messageDiv.textContent = `Dealer Stands on ${total}`;
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 800);
+}
+
+function checkForBlackjack() {
+    const playerTotal = calculateHandTotal(playerHand);
+    const dealerTotal = calculateHandTotal(dealerHand);
+    
+    const playerBlackjack = playerTotal === 21 && playerHand.length === 2;
+    const dealerBlackjack = dealerTotal === 21 && dealerHand.length === 2;
+    
+    if (playerBlackjack || dealerBlackjack) {
+        gameInProgress = false;
+        renderGame(false); // Show dealer's hidden card
+        updateTotals();
+        
+        setTimeout(() => {
+            if (playerBlackjack && !dealerBlackjack) {
+                balance += 150; // Blackjack pays 3:2
+                endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Blackjack!</div>', true);
+            } else if (!playerBlackjack && dealerBlackjack) {
+                balance -= 100;
+                endGame('<div class="text-2xl sm:text-4xl mb-1">YOU LOSE!</div><div class="text-xs sm:text-xl">Dealer has Blackjack</div>', false);
+            } else if (playerBlackjack && dealerBlackjack) {
+                endGame('<div class="text-2xl sm:text-4xl mb-1">PUSH!</div><div class="text-xs sm:text-xl">Both have Blackjack</div>', null);
+            }
+        }, 1200);
+        return true;
+    }
+    return false;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
