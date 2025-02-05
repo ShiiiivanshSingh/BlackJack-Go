@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blackjack Go</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🃏</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
@@ -23,7 +25,7 @@
         </a>
         <div class="absolute inset-0 bg-black opacity-50"></div>
         <div class="relative z-10 text-center">
-            <h1 class="casino-title text-7xl font-bold mb-8">Blackjack Go</h1>
+            <h1 class="casino-title text-5xl sm:text-7xl font-bold mb-8">Blackjack Go</h1>
             <button onclick="startGame()" class="casino-button text-2xl px-12 py-4 rounded-full font-bold transform hover:scale-105 transition-all">
                 Take a Seat
             </button>
@@ -40,14 +42,14 @@
 
     <div id="gameScreen" class="hidden">
         <div class="balance-container">
-            <div class="chip-display">
+            <div class="chip-display hidden sm:block">
                 <div class="chip-stack">
-                    <div class="chip"></div>
+                    <div class="chip scale-75 sm:scale-100"></div>
                 </div>
             </div>
             <div>
-                <div class="balance-label">Balance</div>
-                <div id="balance" class="balance-amount">$1000</div>
+                <div class="balance-label hidden sm:block text-sm sm:text-base">Balance</div>
+                <div id="balance" class="balance-amount text-base sm:text-2xl">$1000</div>
             </div>
         </div>
 
@@ -77,73 +79,79 @@
         </div>
     </div>
 
-    <div id="gameOverScreen" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-        <a href="about.html" class="about-button" title="About Game">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-            </svg>
-        </a>
-        <button onclick="exitToMenu()" class="exit-button" title="Exit to Menu">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
-        <div class="game-over-container rounded-2xl backdrop-blur-lg bg-white bg-opacity-10">
-            <div class="game-over-content text-center">
-                <h2 id="gameOverText" class="casino-title game-over-text mb-8"></h2>
-                <div class="game-stats">
-                    <div class="stat-item">Games Won: <span id="finalGamesWon">0</span></div>
-                    <div class="stat-item">Games Lost: <span id="finalGamesLost">0</span></div>
-                    <div class="stat-item">Win Rate: <span id="winRate">0</span>%</div>
-                    <div class="stat-item">Current Balance: $<span id="finalBalance">1000</span></div>
-                </div>
-                <div id="gameOverOptions" class="game-over-options">
-                    <button onclick="restartGame()" id="playAgainBtn" class="casino-button px-10 py-4 rounded-full text-xl font-bold">
-                        Play Again
-                    </button>
-                    <button onclick="resetGame()" id="resetBtn" class="casino-button reset-button px-10 py-4 rounded-full text-xl font-bold hidden">
-                        Start Fresh ($1000)
-                    </button>
+            <div id="gameOverScreen" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+                <a href="about.html" class="about-button" title="About Game">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 sm:w-6 sm:h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                    </svg>
+                </a>
+                <button onclick="exitToMenu()" class="exit-button" title="Exit to Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 sm:w-5 sm:h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <div class="game-over-container rounded-2xl backdrop-blur-lg bg-white bg-opacity-10">
+                    <div class="game-over-content text-center">
+                        <div class="text-center mb-4">
+                            <div id="gameOverText" class="game-result-text leading-tight max-w-full px-2 break-words"></div>
+                        </div>
+                        
+
+
+
+                        <div class="game-stats text-sm sm:text-base">
+                            <div class="stat-item">Games Won: <span id="finalGamesWon">0</span></div>
+                            <div class="stat-item">Games Lost: <span id="finalGamesLost">0</span></div>
+                            <div class="stat-item">Win Rate: <span id="winRate">0</span>%</div>
+                            <div class="stat-item">Current Balance: $<span id="finalBalance">1000</span></div>
+                        </div>
+                        <div id="gameOverOptions" class="game-over-options">
+                            <button onclick="restartGame()" id="playAgainBtn" class="casino-button px-8 sm:px-10 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-bold">
+                                Play Again
+                            </button>
+                            <button onclick="resetGame()" id="resetBtn" class="casino-button reset-button px-8 sm:px-10 py-3 sm:py-4 rounded-full text-lg sm:text-xl font-bold hidden">
+                                Start Fresh ($1000)
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
 
     <div id="instructionsModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-        <div class="bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] p-8 rounded-2xl max-w-2xl mx-4 relative border border-[#ffd700]">
+        <div class="bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] p-6 rounded-2xl w-full max-w-md mx-4 relative border border-[#ffd700] max-h-[90vh] overflow-y-auto">
             <button onclick="hideInstructions()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
-            <h2 class="casino-title text-3xl mb-6">How to Play Blackjack</h2>
-            <div class="space-y-4 text-gray-300">
-                <div class="mb-4">
-                    <h3 class="text-xl text-[#ffd700] mb-2">Objective</h3>
+            <h2 class="casino-title text-2xl mb-4">How to Play Blackjack</h2>
+            <div class="space-y-3 text-gray-300 text-sm sm:text-base">
+                <div class="mb-3">
+                    <h3 class="text-lg text-[#ffd700] mb-1">Objective</h3>
                     <p>Beat the dealer by getting a hand value closer to 21 without going over.</p>
                 </div>
-                <div class="mb-4">
-                    <h3 class="text-xl text-[#ffd700] mb-2">Card Values</h3>
-                    <ul class="list-disc pl-5 space-y-1">
+                <div class="mb-3">
+                    <h3 class="text-lg text-[#ffd700] mb-1">Card Values</h3>
+                    <ul class="list-disc pl-4 space-y-0.5">
                         <li>Number cards (2-10): Face value</li>
                         <li>Face cards (J, Q, K): 10 points</li>
-                        <li>Ace: 1 or 11 points (whichever helps your hand)</li>
+                        <li>Ace: 1 or 11 points</li>
                     </ul>
                 </div>
-                <div class="mb-4">
-                    <h3 class="text-xl text-[#ffd700] mb-2">Game Flow</h3>
-                    <ol class="list-decimal pl-5 space-y-1">
-                        <li>You and the dealer each get two cards</li>
-                        <li>One dealer card remains hidden until the end</li>
-                        <li>Choose to "Hit" (take another card) or "Stand" (keep current hand)</li>
-                        <li>Going over 21 is a "bust" and results in a loss</li>
-                        <li>Dealer must hit on 16 and stand on 17</li>
+                <div class="mb-3">
+                    <h3 class="text-lg text-[#ffd700] mb-1">Game Flow</h3>
+                    <ol class="list-decimal pl-4 space-y-0.5">
+                        <li>You and dealer get two cards</li>
+                        <li>One dealer card stays hidden</li>
+                        <li>"Hit" for new card, "Stand" to keep hand</li>
+                        <li>Over 21 is a "bust" - you lose</li>
+                        <li>Dealer hits on 16, stands on 17</li>
                     </ol>
                 </div>
-                <div class="mb-4">
-                    <h3 class="text-xl text-[#ffd700] mb-2">Winning</h3>
-                    <ul class="list-disc pl-5 space-y-1">
-                        <li>Get closer to 21 than the dealer</li>
+                <div class="mb-3">
+                    <h3 class="text-lg text-[#ffd700] mb-1">Winning</h3>
+                    <ul class="list-disc pl-4 space-y-0.5">
+                        <li>Get closer to 21 than dealer</li>
                         <li>Dealer busts while you don't</li>
                         <li>Get exactly 21 (Blackjack)</li>
                     </ul>

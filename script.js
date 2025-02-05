@@ -139,7 +139,7 @@ function hit() {
         setTimeout(() => {
             balance -= 100;
             document.getElementById('balance').textContent = `$${balance}`;
-            endGame("You Bust! Dealer Wins.", false);
+            endGame("<div class='text-2xl sm:text-4xl mb-1'>YOU LOSE!</div><div class='text-xs sm:text-xl'>Bust!</div>", false);
         }, 3000);
     } else {
         enableButtons(true); // Re-enable buttons if game continues
@@ -212,26 +212,26 @@ function determineWinner() {
     
     if (playerBlackjack && !dealerBlackjack) {
         balance += 150; // Blackjack pays 3:2
-        endGame("Blackjack! You Win!", true);
+        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Blackjack!</div>', true);
     } else if (!playerBlackjack && dealerBlackjack) {
         balance -= 100;
-        endGame("Dealer has Blackjack!", false);
+        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU LOSE!</div><div class="text-xs sm:text-xl">Dealer has Blackjack</div>', false);
     } else if (playerBlackjack && dealerBlackjack) {
-        endGame("Both have Blackjack - Push!", null);
+        endGame('<div class="text-2xl sm:text-4xl mb-1">PUSH!</div><div class="text-xs sm:text-xl">Both have Blackjack</div>', null);
     } else if (playerTotal > 21) {
         balance -= 100;
-        endGame("You Bust! Dealer Wins.", false);
+        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU LOSE!</div><div class="text-xs sm:text-xl">Bust!</div>', false);
     } else if (dealerTotal > 21) {
         balance += 100;
-        endGame("Dealer Busts! You Win!", true);
+        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Dealer Busts!</div>', true);
     } else if (playerTotal > dealerTotal) {
         balance += 100;
-        endGame("You Win!", true);
+        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Higher Hand!</div>', true);
     } else if (dealerTotal > playerTotal) {
         balance -= 100;
-        endGame("Dealer Wins!", false);
+        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU LOSE!</div><div class="text-xs sm:text-xl">Dealer has Higher Hand</div>', false);
     } else {
-        endGame("It's a Push!", null);
+        endGame('<div class="text-2xl sm:text-4xl mb-1">PUSH!</div><div class="text-xs sm:text-xl">Equal Hands</div>', null);
     }
     
     document.getElementById('balance').textContent = `$${balance}`;
@@ -240,7 +240,7 @@ function determineWinner() {
 function endGame(message, isWin = false) {
     gameInProgress = false;
     const gameOverText = document.getElementById('gameOverText');
-    gameOverText.textContent = message;
+    gameOverText.innerHTML = message;
     
     if (isWin !== null) {
         gameOverText.className = isWin ? 
@@ -336,6 +336,15 @@ function showShuffleMessage() {
     setTimeout(() => {
         messageDiv.remove();
     }, 1500);
+}
+
+function revealDealerCard() {
+    const dealerHiddenCard = document.querySelector('.dealer-cards .card.hidden');
+    if (dealerHiddenCard) {
+        dealerHiddenCard.classList.remove('hidden');
+        // Update dealer's hand total display after revealing card
+        updateHandTotal('dealer', calculateHandTotal(dealerHand));
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

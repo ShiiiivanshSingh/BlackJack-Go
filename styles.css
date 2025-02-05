@@ -132,6 +132,18 @@ body::before {
     -webkit-text-fill-color: transparent;
 }
 
+.casino-title-2 {
+    font-family: 'Times New Roman', serif;
+    text-shadow: 
+        0 0 10px rgba(255,215,0,0.5),
+        0 0 20px rgba(255,215,0,0.3),
+        0 0 30px rgba(255,215,0,0.2);
+    background: linear-gradient(45deg, #ffd700 0%, #ffb700 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 0.5rem;
+}
+
 .dealer-area, .player-area {
     background: rgba(0,0,0,0.2);
     border-radius: 20px;
@@ -182,6 +194,7 @@ body::before {
     .casino-title {
         font-size: 2.5rem;
     }
+
 
     .table-felt {
         border-width: 10px;
@@ -579,4 +592,12 @@ body::before {
     opacity: 0.5;
     cursor: not-allowed;
     transform: none !important;
-} 
+}
+
+.game-result-text {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    background: linear-gradient(45deg, #ffd700 0%, #ffb700 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
