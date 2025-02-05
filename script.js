@@ -59,6 +59,23 @@ function drawCard() {
     if (usedCards.size >= maxCardsBeforeReshuffle) {
         usedCards.clear();
         showShuffleMessage();
+        // Add a small delay to let the shuffle message be visible
+        return new Promise(resolve => {
+            setTimeout(() => {
+                let card;
+                do {
+                    let suit = Object.keys(suits)[Math.floor(Math.random() * 4)];
+                    let value = values[Math.floor(Math.random() * values.length)];
+                    card = `${value}-${suit}`;
+                } while (usedCards.has(card));
+                
+                usedCards.add(card);
+                resolve({
+                    suit: card.split('-')[1],
+                    value: card.split('-')[0]
+                });
+            }, 1000);
+        });
     }
     
     let card;
@@ -185,15 +202,15 @@ function stand() {
                     } else {
                         showDealerStandMessage(dealerTotal);
                         setTimeout(() => {
-                            determineWinner();  
-                        }, 3500);
+                            determineWinner();  // Show round over immediately after dealer stands
+                        }, 800);
                     }
                 }, 800);
             } else {
                 showDealerStandMessage(dealerTotal);
                 setTimeout(() => {
-                    determineWinner();  
-                }, 3500);
+                    determineWinner();  // Show round over immediately after dealer stands
+                }, 800);
             }
         };
         
@@ -202,8 +219,8 @@ function stand() {
         } else {
             showDealerStandMessage(dealerTotal);
             setTimeout(() => {
-                determineWinner();  // Now 3500ms delay
-            }, 3500);
+                determineWinner();  // Show round over immediately after dealer stands
+            }, 800);
         }
         
     }, 1000);
@@ -233,6 +250,54 @@ function calculateHandTotal(hand) {
     return total;
 }
 
+function showRoundOver(playerTotal, dealerTotal, playerBlackjack, dealerBlackjack) {
+    const overlayDiv = document.createElement('div');
+    overlayDiv.className = 'fixed inset-0 flex items-center justify-center z-40';
+    overlayDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    overlayDiv.style.opacity = '0';
+    overlayDiv.style.transition = 'opacity 0.3s ease';
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'text-[#ffd700] text-3xl sm:text-4xl font-bold text-center';
+    messageDiv.style.transform = 'translateY(20px)';
+    messageDiv.style.opacity = '0';
+    messageDiv.style.transition = 'all 0.3s ease';
+    
+    if (dealerBlackjack) {
+        messageDiv.textContent = 'Dealer Natural Blackjack!';
+    } else if (playerTotal > 21) {
+        messageDiv.textContent = 'Bust!';
+    } else if (dealerTotal > 21) {
+        messageDiv.textContent = 'Dealer Busts!';
+    } else if (playerTotal > dealerTotal) {
+        messageDiv.textContent = 'You Win!';
+    } else if (dealerTotal > playerTotal) {
+        messageDiv.textContent = 'Dealer Wins!';
+    } else {
+        messageDiv.textContent = 'Push!';
+    }
+    
+    overlayDiv.appendChild(messageDiv);
+    document.body.appendChild(overlayDiv);
+    
+    setTimeout(() => {
+        overlayDiv.style.opacity = '1';
+        messageDiv.style.opacity = '1';
+        messageDiv.style.transform = 'translateY(0)';
+    }, 30);
+    
+    // Remove after 1200ms (just before game over screen)
+    setTimeout(() => {
+        overlayDiv.style.opacity = '0';
+        messageDiv.style.opacity = '0';
+        messageDiv.style.transform = 'translateY(-20px)';
+        
+        setTimeout(() => {
+            overlayDiv.remove();
+        }, 300);
+    }, 1200);
+}
+
 function determineWinner() {
     let playerTotal = calculateHandTotal(playerHand);
     let dealerTotal = calculateHandTotal(dealerHand);
@@ -240,31 +305,36 @@ function determineWinner() {
     let playerBlackjack = playerTotal === 21 && playerHand.length === 2;
     let dealerBlackjack = dealerTotal === 21 && dealerHand.length === 2;
     
-    if (playerBlackjack && !dealerBlackjack) {
-        balance += 150; // Blackjack pays 3:2
-        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Blackjack!</div>', true);
-    } else if (!playerBlackjack && dealerBlackjack) {
-        balance -= 100;
-        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU LOSE!</div><div class="text-xs sm:text-xl">Dealer has Blackjack</div>', false);
-    } else if (playerBlackjack && dealerBlackjack) {
-        endGame('<div class="text-2xl sm:text-4xl mb-1">PUSH!</div><div class="text-xs sm:text-xl">Both have Blackjack</div>', null);
-    } else if (playerTotal > 21) {
-        balance -= 100;
-        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU LOSE!</div><div class="text-xs sm:text-xl">Bust!</div>', false);
-    } else if (dealerTotal > 21) {
-        balance += 100;
-        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Dealer Busts!</div>', true);
-    } else if (playerTotal > dealerTotal) {
-        balance += 100;
-        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Higher Hand!</div>', true);
-    } else if (dealerTotal > playerTotal) {
-        balance -= 100;
-        endGame('<div class="text-2xl sm:text-4xl mb-1">YOU LOSE!</div><div class="text-xs sm:text-xl">Dealer has Higher Hand</div>', false);
-    } else {
-        endGame('<div class="text-2xl sm:text-4xl mb-1">PUSH!</div><div class="text-xs sm:text-xl">Equal Hands</div>', null);
-    }
+    showRoundOver(playerTotal, dealerTotal, playerBlackjack, dealerBlackjack);
     
-    document.getElementById('balance').textContent = `$${balance}`;
+    // Show game over screen after round over animation (1500ms total)
+    setTimeout(() => {
+        if (playerBlackjack && !dealerBlackjack) {
+            balance += 150;
+            endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Natural Blackjack!</div>', true);
+        } else if (!playerBlackjack && dealerBlackjack) {
+            balance -= 100;
+            endGame('<div class="text-2xl sm:text-4xl mb-1">YOU LOSE!</div><div class="text-xs sm:text-xl">Dealer has Natural Blackjack!</div>', false);
+        } else if (playerBlackjack && dealerBlackjack) {
+            endGame('<div class="text-2xl sm:text-4xl mb-1">PUSH!</div><div class="text-xs sm:text-xl">Both have Natural Blackjack!</div>', null);
+        } else if (playerTotal > 21) {
+            balance -= 100;
+            endGame('<div class="text-2xl sm:text-4xl mb-1">YOU LOSE!</div><div class="text-xs sm:text-xl">Bust!</div>', false);
+        } else if (dealerTotal > 21) {
+            balance += 100;
+            endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Dealer Busts!</div>', true);
+        } else if (playerTotal > dealerTotal) {
+            balance += 100;
+            endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Higher Hand!</div>', true);
+        } else if (dealerTotal > playerTotal) {
+            balance -= 100;
+            endGame('<div class="text-2xl sm:text-4xl mb-1">YOU LOSE!</div><div class="text-xs sm:text-xl">Dealer has Higher Hand</div>', false);
+        } else {
+            endGame('<div class="text-2xl sm:text-4xl mb-1">PUSH!</div><div class="text-xs sm:text-xl">Equal Hands</div>', null);
+        }
+        updateBalance();
+        saveGameData();
+    }, 1500);  // Reduced from 3000ms to match round over timing
 }
 
 function endGame(message, isWin = false) {
@@ -310,12 +380,13 @@ function endGame(message, isWin = false) {
 
 function resetGame() {
     balance = 1000;
-    stats = {
-        gamesWon: 0,
-        gamesLost: 0
-    };
-    document.getElementById('balance').textContent = `$${balance}`;
-    startGame();
+    stats.gamesWon = 0;
+    stats.gamesLost = 0;
+    saveGameData();
+    updateBalance();
+    updateStats();
+    document.getElementById('playAgainBtn').classList.remove('hidden');
+    document.getElementById('resetBtn').classList.add('hidden');
 }
 
 function restartGame() {
@@ -389,14 +460,17 @@ function showDealerDrawMessage() {
 }
 
 function showDealerStandMessage(total) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'shuffle-message';
-    messageDiv.textContent = `Dealer Stands on ${total}`;
-    document.body.appendChild(messageDiv);
-    
-    setTimeout(() => {
-        messageDiv.remove();
-    }, 800);
+    // Only show stand message if dealer's total is less than 21
+    if (total < 21) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'shuffle-message';
+        messageDiv.textContent = `Dealer Stands on ${total}`;
+        document.body.appendChild(messageDiv);
+        
+        setTimeout(() => {
+            messageDiv.remove();
+        }, 800);
+    }
 }
 
 function checkForBlackjack() {
@@ -478,6 +552,50 @@ function playAgain() {
     checkForBlackjack();
 }
 
+// Load saved data when game starts
+function loadSavedData() {
+    const savedData = localStorage.getItem('blackjackData');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        balance = data.balance || 1000;
+        stats.gamesWon = data.gamesWon || 0;
+        stats.gamesLost = data.gamesLost || 0;
+    }
+    updateBalance();
+    updateStats();
+}
+
+// Save data after each game
+function saveGameData() {
+    const gameData = {
+        balance: balance,
+        gamesWon: stats.gamesWon,
+        gamesLost: stats.gamesLost
+    };
+    localStorage.setItem('blackjackData', JSON.stringify(gameData));
+}
+
+// Add updateBalance function
+function updateBalance() {
+    document.getElementById('balance').textContent = balance;
+    document.getElementById('finalBalance').textContent = balance;
+}
+
+// Add updateStats function
+function updateStats() {
+    document.getElementById('finalGamesWon').textContent = stats.gamesWon;
+    document.getElementById('finalGamesLost').textContent = stats.gamesLost;
+    const totalGames = stats.gamesWon + stats.gamesLost;
+    const winRate = totalGames > 0 ? Math.round((stats.gamesWon / totalGames) * 100) : 0;
+    document.getElementById('winRate').textContent = winRate;
+}
+
+// Call loadSavedData when the game starts
+window.onload = function() {
+    loadSavedData();
+    // ... any other initialization code ...
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     const hitButton = document.getElementById('hitButton');
     const standButton = document.getElementById('standButton');
@@ -487,4 +605,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     balance = 1000;
     document.getElementById('balance').textContent = `$${balance}`;
-}); 
+});
+
+function showGameEndMessage(message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'shuffle-message';
+    messageDiv.textContent = message;
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 1500);
+} 
