@@ -15,6 +15,8 @@ let stats = {
 let usedCards = new Set();
 let numberOfDecks = 6; // Standard casino usually uses 6-8 decks
 let maxCardsBeforeReshuffle = 52 * numberOfDecks * 0.75; // Reshuffle at 75% penetration
+let isAnimating = false;
+let activeTimeouts = [];
 
 function createCardElement(card, isHidden = false) {
     if (isHidden) {
@@ -114,18 +116,20 @@ function updateTotals() {
         calculateHandTotal(dealerHand);  // All cards when game is over
 }
 
-function enableButtons(enabled) {
-    const buttons = ['hitButton', 'standButton'];
-    buttons.forEach(buttonId => {
-        const button = document.getElementById(buttonId);
-        button.disabled = !enabled;
-        button.style.opacity = enabled ? '1' : '0.5';
-    });
+function enableButtons(enabled = true) {
+    const hitButton = document.getElementById('hitButton');
+    const standButton = document.getElementById('standButton');
+    
+    hitButton.disabled = !enabled;
+    standButton.disabled = !enabled;
+    hitButton.style.opacity = enabled ? '1' : '0.5';
+    standButton.style.opacity = enabled ? '1' : '0.5';
 }
 
 function hit() {
-    if (!gameInProgress) return;
-    enableButtons(false); // Prevent double-clicking during animation
+    if (!gameInProgress || isAnimating) return;
+    enableButtons(false); // Disable during animation
+    isAnimating = true;
     
     playerHand.push(drawCard());
     renderGame(true);
@@ -136,68 +140,31 @@ function hit() {
         renderGame(false);
         updateTotals();
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
             balance -= 100;
             document.getElementById('balance').textContent = `$${balance}`;
             endGame("<div class='text-2xl sm:text-4xl mb-1'>YOU LOSE!</div><div class='text-xs sm:text-xl'>Bust!</div>", false);
-        }, 3000);
+            isAnimating = false;
+        }, 1500);
     } else {
-        enableButtons(true); // Re-enable buttons if game continues
+        isAnimating = false;
+        enableButtons(true); // Re-enable after animation
     }
 }
 
 function stand() {
-    if (!gameInProgress) return;
+    if (!gameInProgress || isAnimating) return;
+    enableButtons(false); // Disable during dealer's turn
+    isAnimating = true;
     
     showRevealMessage();
     gameInProgress = false;
     renderGame(false);
     updateTotals();
     
-    let dealerTotal = calculateHandTotal(dealerHand);
-    
-    // Add initial delay after revealing dealer's card
-    setTimeout(() => {
-        // Function to draw dealer cards one at a time
-        const drawDealerCard = () => {
-            dealerTotal = calculateHandTotal(dealerHand);
-            // Dealer must stand on soft 17 (A + 6) or higher
-            if (dealerTotal < 17) {
-                showDealerDrawMessage();
-                setTimeout(() => {
-                    dealerHand.push(drawCard());
-                    dealerTotal = calculateHandTotal(dealerHand);
-                    renderGame(false);
-                    updateTotals();
-                    
-                    // Recursively call with delay for next card if needed
-                    if (dealerTotal < 17) {
-                        setTimeout(drawDealerCard, 1000);
-                    } else {
-                        // Dealer stands, show game over after delay
-                        setTimeout(() => {
-                            determineWinner();
-                        }, 800);
-                    }
-                }, 800);
-            } else {
-                // Dealer stands, proceed to game over
-                setTimeout(() => {
-                    determineWinner();
-                }, 800);
-            }
-        };
-        
-        // Start dealer's turn
-        if (dealerTotal < 17) {
-            drawDealerCard();
-        } else {
-            // Dealer already has 17 or higher, stands immediately
-            setTimeout(() => {
-                determineWinner();
-            }, 800);
-        }
-        
+    safeSetTimeout(() => {
+        determineWinner();
+        isAnimating = false;
     }, 1000);
 }
 
@@ -261,6 +228,11 @@ function determineWinner() {
 
 function endGame(message, isWin = false) {
     gameInProgress = false;
+    
+    // Remove any lingering messages
+    const messages = document.querySelectorAll('.reveal-message, .shuffle-message');
+    messages.forEach(msg => msg.remove());
+    
     const gameOverText = document.getElementById('gameOverText');
     gameOverText.innerHTML = message;
     
@@ -391,8 +363,9 @@ function checkForBlackjack() {
         gameInProgress = false;
         renderGame(false); // Show dealer's hidden card
         updateTotals();
+        enableButtons(false); // Disable buttons immediately
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
             if (playerBlackjack && !dealerBlackjack) {
                 balance += 150; // Blackjack pays 3:2
                 endGame('<div class="text-2xl sm:text-4xl mb-1">YOU WIN!</div><div class="text-xs sm:text-xl">Blackjack!</div>', true);
@@ -402,10 +375,65 @@ function checkForBlackjack() {
             } else if (playerBlackjack && dealerBlackjack) {
                 endGame('<div class="text-2xl sm:text-4xl mb-1">PUSH!</div><div class="text-xs sm:text-xl">Both have Blackjack</div>', null);
             }
+            isAnimating = false;
         }, 1200);
         return true;
     }
+    
+    // If no blackjack, make sure buttons are enabled
+    enableButtons(true);
     return false;
+}
+
+function safeSetTimeout(callback, delay) {
+    const timeoutId = setTimeout(callback, delay);
+    activeTimeouts.push(timeoutId);
+    return timeoutId;
+}
+
+function cleanupGame() {
+    // Clear all timeouts
+    activeTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+    activeTimeouts = [];
+    
+    // Remove all overlay messages
+    const overlays = document.querySelectorAll('.shuffle-message, .reveal-message, [class*="fixed inset-0"]');
+    overlays.forEach(overlay => overlay.remove());
+    
+    // Reset flags
+    isAnimating = false;
+    gameInProgress = true;
+    
+    // Enable buttons
+    enableButtons(true);
+}
+
+function playAgain() {
+    if (balance < 100) {
+        document.getElementById('playAgainBtn').classList.add('hidden');
+        document.getElementById('resetBtn').classList.remove('hidden');
+        return;
+    }
+    
+    cleanupGame();
+    
+    // Reset game state
+    gameInProgress = true;
+    isAnimating = false;
+    playerHand = [drawCard(), drawCard()];
+    dealerHand = [drawCard(), drawCard()];
+    
+    document.getElementById('gameOverScreen').classList.add('hidden');
+    document.getElementById('gameScreen').classList.remove('hidden');
+    
+    renderGame(true);
+    updateTotals();
+    
+    // Enable buttons by default
+    enableButtons(true);
+    
+    // Check for blackjack (this will handle disabling buttons if needed)
+    checkForBlackjack();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
