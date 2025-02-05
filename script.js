@@ -15,6 +15,8 @@ let stats = {
 let usedCards = new Set();
 let numberOfDecks = 6; // Standard casino usually uses 6-8 decks
 let maxCardsBeforeReshuffle = 52 * numberOfDecks * 0.75; // Reshuffle at 75% penetration
+let isAnimating = false;
+let activeTimeouts = [];
 
 function createCardElement(card, isHidden = false) {
     if (isHidden) {
@@ -99,7 +101,12 @@ function startGame() {
         return;
     }
     
+    // Reset game state
     gameInProgress = true;
+    playerHand = [];
+    dealerHand = [];
+    
+    // Draw initial cards
     playerHand = [drawCard(), drawCard()];
     dealerHand = [drawCard(), drawCard()];
     
@@ -153,9 +160,36 @@ function enableButtons(enabled) {
     });
 }
 
+function cleanupGame() {
+    // Clear all timeouts
+    activeTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+    activeTimeouts = [];
+    
+    // Remove all overlay messages
+    const overlays = document.querySelectorAll('.shuffle-message, .reveal-message, [class*="fixed inset-0"]');
+    overlays.forEach(overlay => overlay.remove());
+    
+    // Reset animation flag
+    isAnimating = false;
+    
+    // Reset button states
+    const hitButton = document.getElementById('hitButton');
+    const standButton = document.getElementById('standButton');
+    
+    hitButton.disabled = false;
+    standButton.disabled = false;
+    hitButton.classList.remove('disabled');
+    standButton.classList.remove('disabled');
+    hitButton.style.opacity = '1';
+    standButton.style.opacity = '1';
+    
+    // Reset game state
+    gameInProgress = true;
+}
+
 function hit() {
-    if (!gameInProgress) return;
-    enableButtons(false); // Prevent double-clicking during animation
+    if (!gameInProgress || isAnimating) return;
+    isAnimating = true;
     
     playerHand.push(drawCard());
     renderGame(true);
@@ -166,63 +200,29 @@ function hit() {
         renderGame(false);
         updateTotals();
         
-        setTimeout(() => {
+        safeSetTimeout(() => {
             balance -= 100;
             document.getElementById('balance').textContent = `$${balance}`;
             endGame("<div class='text-2xl sm:text-4xl mb-1'>YOU LOSE!</div><div class='text-xs sm:text-xl'>Bust!</div>", false);
-        }, 3000);
+            isAnimating = false;
+        }, 1500);
     } else {
-        enableButtons(true); // Re-enable buttons if game continues
+        isAnimating = false;
     }
 }
 
 function stand() {
-    if (!gameInProgress) return;
+    if (!gameInProgress || isAnimating) return;
+    isAnimating = true;
     
     showRevealMessage();
     gameInProgress = false;
     renderGame(false);
     updateTotals();
     
-    let dealerTotal = calculateHandTotal(dealerHand);
-    
-    setTimeout(() => {
-        const drawDealerCard = () => {
-            dealerTotal = calculateHandTotal(dealerHand);
-            if (dealerTotal < 17) {
-                showDealerDrawMessage();
-                setTimeout(() => {
-                    dealerHand.push(drawCard());
-                    dealerTotal = calculateHandTotal(dealerHand);
-                    renderGame(false);
-                    updateTotals();
-                    
-                    if (dealerTotal < 17) {
-                        setTimeout(drawDealerCard, 1000);
-                    } else {
-                        showDealerStandMessage(dealerTotal);
-                        setTimeout(() => {
-                            determineWinner();  // Show round over immediately after dealer stands
-                        }, 800);
-                    }
-                }, 800);
-            } else {
-                showDealerStandMessage(dealerTotal);
-                setTimeout(() => {
-                    determineWinner();  // Show round over immediately after dealer stands
-                }, 800);
-            }
-        };
-        
-        if (dealerTotal < 17) {
-            drawDealerCard();
-        } else {
-            showDealerStandMessage(dealerTotal);
-            setTimeout(() => {
-                determineWinner();  // Show round over immediately after dealer stands
-            }, 800);
-        }
-        
+    safeSetTimeout(() => {
+        determineWinner();
+        isAnimating = false;
     }, 1000);
 }
 
@@ -416,6 +416,7 @@ function exitToMenu() {
 function showRevealMessage() {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'reveal-message';
+    messageDiv.style.top = '40%'; 
     messageDiv.innerHTML = `
         <div class="reveal-text">
             <span>Dealer Card Revealed</span>
@@ -425,7 +426,7 @@ function showRevealMessage() {
     
     setTimeout(() => {
         messageDiv.remove();
-    }, 3000);
+    }, 1000);
 }
 
 function showShuffleMessage() {
@@ -518,6 +519,19 @@ function updateControls() {
     }
 }
 
+function safeSetTimeout(callback, delay) {
+    if (!gameInProgress && !isAnimating) return;
+    const timeoutId = setTimeout(() => {
+        const index = activeTimeouts.indexOf(timeoutId);
+        if (index > -1) {
+            activeTimeouts.splice(index, 1);
+        }
+        callback();
+    }, delay);
+    activeTimeouts.push(timeoutId);
+    return timeoutId;
+}
+
 function playAgain() {
     if (balance < 100) {
         document.getElementById('playAgainBtn').classList.add('hidden');
@@ -525,27 +539,13 @@ function playAgain() {
         return;
     }
     
-    // Reset game state
-    gameInProgress = true;
+    cleanupGame();
+    
     playerHand = [drawCard(), drawCard()];
     dealerHand = [drawCard(), drawCard()];
     
-    // Reset UI
     document.getElementById('gameOverScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
-    
-    // Enable buttons and reset their styles
-    const hitButton = document.getElementById('hitButton');
-    const standButton = document.getElementById('standButton');
-    
-    hitButton.disabled = false;
-    standButton.disabled = false;
-    
-    // Remove any disabled classes or styles
-    hitButton.classList.remove('disabled');
-    standButton.classList.remove('disabled');
-    hitButton.style.opacity = '1';
-    standButton.style.opacity = '1';
     
     renderGame(true);
     updateTotals();
