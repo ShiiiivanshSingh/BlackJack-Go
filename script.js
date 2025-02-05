@@ -338,6 +338,9 @@ function determineWinner() {
 }
 
 function endGame(message, isWin = false) {
+    // Clean up before showing game over
+    cleanupGame();
+    
     gameInProgress = false;
     const gameOverText = document.getElementById('gameOverText');
     gameOverText.innerHTML = message;
@@ -416,7 +419,7 @@ function exitToMenu() {
 function showRevealMessage() {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'reveal-message';
-    messageDiv.style.top = '40%'; 
+    messageDiv.style.top = '40%';
     messageDiv.innerHTML = `
         <div class="reveal-text">
             <span>Dealer Card Revealed</span>
@@ -424,7 +427,7 @@ function showRevealMessage() {
     `;
     document.body.appendChild(messageDiv);
     
-    setTimeout(() => {
+    safeSetTimeout(() => {
         messageDiv.remove();
     }, 1000);
 }
