@@ -109,9 +109,10 @@ function renderGame(isInitial = false) {
 }
 
 function updateTotals() {
-    document.getElementById('playerTotal').textContent = getHandValue(playerHand);
-    document.getElementById('dealerTotal').textContent = 
-        gameInProgress ? getHandValue([dealerHand[0]]) : getHandValue(dealerHand);
+    document.getElementById('playerTotal').textContent = calculateHandTotal(playerHand);
+    document.getElementById('dealerTotal').textContent = gameInProgress ? 
+        calculateHandTotal([dealerHand[0]]) : // Only first card during game
+        calculateHandTotal(dealerHand);  // All cards when game is over
 }
 
 function enableButtons(enabled) {
@@ -130,7 +131,7 @@ function hit() {
     playerHand.push(drawCard());
     renderGame(true);
     
-    let playerTotal = getHandValue(playerHand);
+    let playerTotal = calculateHandTotal(playerHand);
     if (playerTotal > 21) {
         showRevealMessage();
         renderGame(false);
@@ -148,30 +149,52 @@ function hit() {
 
 function stand() {
     if (!gameInProgress) return;
-    enableButtons(false); // Prevent double-clicking
-    
-    // Dealer must draw on soft 17 (industry standard)
-    while (getHandValue(dealerHand) <= 17) {
-        // Check if it's a soft 17
-        if (getHandValue(dealerHand) === 17 && dealerHand.some(card => card.value === 'A')) {
-            dealerHand.push(drawCard());
-        } else if (getHandValue(dealerHand) < 17) {
-            dealerHand.push(drawCard());
-        } else {
-            break;
-        }
-    }
     
     showRevealMessage();
+    gameInProgress = false;
     renderGame(false);
     updateTotals();
     
+    let dealerTotal = calculateHandTotal(dealerHand);
+    
+    // Add initial delay after revealing dealer's card
     setTimeout(() => {
-        determineWinner();
-    }, 3000);
+        // Function to draw dealer cards one at a time
+        const drawDealerCard = () => {
+            if (dealerTotal < 17) {
+                showDealerDrawMessage();
+                setTimeout(() => {
+                    dealerHand.push(drawCard());
+                    dealerTotal = calculateHandTotal(dealerHand);
+                    renderGame(false);
+                    updateTotals();
+                    
+                    // Recursively call with delay for next card if needed
+                    if (dealerTotal < 17) {
+                        setTimeout(drawDealerCard, 1000);
+                    } else {
+                        // All cards drawn, show game over after delay
+                        setTimeout(() => {
+                            determineWinner();
+                        }, 800);
+                    }
+                }, 800);
+            }
+        };
+        
+        if (dealerTotal < 17) {
+            drawDealerCard();
+        } else {
+            // No cards needed, proceed to game over
+            setTimeout(() => {
+                determineWinner();
+            }, 800);
+        }
+        
+    }, 1000);
 }
 
-function getHandValue(hand) {
+function calculateHandTotal(hand) {
     let total = 0;
     let aces = 0;
     
@@ -204,8 +227,8 @@ function getHandValue(hand) {
 }
 
 function determineWinner() {
-    let playerTotal = getHandValue(playerHand);
-    let dealerTotal = getHandValue(dealerHand);
+    let playerTotal = calculateHandTotal(playerHand);
+    let dealerTotal = calculateHandTotal(dealerHand);
     
     let playerBlackjack = playerTotal === 21 && playerHand.length === 2;
     let dealerBlackjack = dealerTotal === 21 && dealerHand.length === 2;
@@ -345,6 +368,17 @@ function revealDealerCard() {
         // Update dealer's hand total display after revealing card
         updateHandTotal('dealer', calculateHandTotal(dealerHand));
     }
+}
+
+function showDealerDrawMessage() {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'shuffle-message';
+    messageDiv.textContent = 'Dealer Drawing...';
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 800);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
