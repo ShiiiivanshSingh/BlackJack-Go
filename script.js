@@ -409,7 +409,8 @@ standInternal();
 }
 
 function standInternal() {
-gameInProgress = false;
+// Leave gameInProgress true until showGameOver resolves the round, so the
+// bet chips stay locked while the dealer draws and the payout is applied.
 enableButtons(false);
 isAnimating = true;
 revealDealerAndResolve(true);
@@ -603,4 +604,7 @@ if (e.key === 's' || e.key === 'S') stand();
 if (e.key === 'd' || e.key === 'D') doubleDown();
 });
 
-document.addEventListener('DOMContentLoaded', () => { bumpBalance(balance); });
+document.addEventListener('DOMContentLoaded', () => {
+bumpBalance(balance);
+document.getElementById('dealBtn').addEventListener('click', startGame);
+});
